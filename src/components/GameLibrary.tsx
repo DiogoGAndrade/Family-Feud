@@ -9,6 +9,8 @@ interface Props {
   onDelete: (gameId: string) => void;
   onImport: (game: FeudGame) => void;
   onCreateNew: () => void;
+  onDuplicate: (gameId: string) => void;
+  onReset: (gameId: string) => void;
 }
 
 export default function GameLibrary({
@@ -17,10 +19,22 @@ export default function GameLibrary({
   onDelete,
   onImport,
   onCreateNew,
+  onDuplicate,
+  onReset,
 }: Props) {
   const handleDeleteConfirm = (game: FeudGame) => {
     if (confirm(`Tens a certeza que queres eliminar "${game.title}"?`)) {
       onDelete(game.id);
+    }
+  };
+
+  const handleResetConfirm = (game: FeudGame) => {
+    if (
+      confirm(
+        `Tens a certeza que queres reiniciar "${game.title}"?\nAs pontuações e respostas reveladas vão voltar a zero.`
+      )
+    ) {
+      onReset(game.id);
     }
   };
 
@@ -62,6 +76,8 @@ export default function GameLibrary({
               onPlay={() => onOpen(game.id, "play")}
               onDelete={() => handleDeleteConfirm(game)}
               onExport={() => exportGameToJson(game)}
+              onDuplicate={() => onDuplicate(game.id)}
+              onReset={() => handleResetConfirm(game)}
             />
           ))}
         </div>
@@ -76,26 +92,41 @@ function GameCard({
   onPlay,
   onDelete,
   onExport,
+  onDuplicate,
+  onReset,
 }: {
   game: FeudGame;
   onEdit: () => void;
   onPlay: () => void;
   onDelete: () => void;
   onExport: () => void;
+  onDuplicate: () => void;
+  onReset: () => void;
 }) {
   const completedCount = game.questions.filter((q) => q.completed).length;
   const totalAnswers = game.questions.reduce((s, q) => s + q.answers.length, 0);
   const leadTeam = [...game.teams].sort((a, b) => b.score - a.score)[0];
+  const hasProgress = game.teams.some((t) => t.score > 0) || game.questions.some((q) => q.completed);
 
   return (
     <div className="game-card">
       <div>
-        <div className="flex items-center gap-1 mb-1">
+        <div className="flex items-center gap-1 mb-1" style={{ flexWrap: "wrap" }}>
           <span className={`badge ${game.mode === "camp" ? "badge-camp" : "badge-standard"}`}>
             {game.mode === "camp" ? "Campo" : "Standard"}
           </span>
+          {game.isTemplate && (
+            <span className="badge badge-demo" title="Jogo de demonstração — edita antes de usar num jogo real">
+              Demo
+            </span>
+          )}
         </div>
         <div className="game-card-title">{game.title}</div>
+        {game.isTemplate && (
+          <div className="demo-notice">
+            Perguntas de exemplo — edita os votos/respostas antes de usar num jogo real.
+          </div>
+        )}
         <div className="game-card-meta">
           <span>👥 {game.teams.length} equipas</span>
           <span>❓ {game.questions.length} perguntas</span>
@@ -108,10 +139,27 @@ function GameCard({
           </div>
         )}
       </div>
+
       <div className="game-card-actions">
         <button className="btn btn-primary btn-sm" onClick={onPlay}>▶ Jogar</button>
         <button className="btn btn-secondary btn-sm" onClick={onEdit}>✏️ Editar</button>
-        <button className="btn btn-secondary btn-sm" onClick={onExport}>📤</button>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={onDuplicate}
+          title="Duplicar jogo"
+        >
+          ⧉ Duplicar
+        </button>
+        {hasProgress && (
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={onReset}
+            title="Reiniciar pontuações e respostas"
+          >
+            ↺ Reset
+          </button>
+        )}
+        <button className="btn btn-secondary btn-sm" onClick={onExport} title="Exportar JSON">📤</button>
         <button className="btn btn-danger btn-sm" onClick={onDelete}>🗑</button>
       </div>
     </div>
@@ -134,5 +182,6 @@ export function createNewGame(): FeudGame {
       answerSlots: 8,
       enableSounds: true,
     },
+    isTemplate: false,
   };
 }

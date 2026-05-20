@@ -122,6 +122,7 @@ export const sampleCampGame: FeudGame = {
     answerSlots: 8,
     enableSounds: true,
   },
+  isTemplate: true,
 };
 
 export const sampleStandardGame: FeudGame = {
@@ -170,4 +171,5 @@ export const sampleStandardGame: FeudGame = {
     answerSlots: 8,
     enableSounds: true,
   },
+  isTemplate: true,
 };

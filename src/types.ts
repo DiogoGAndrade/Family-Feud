@@ -37,6 +37,7 @@ export type FeudGame = {
   teams: Team[];
   questions: FeudQuestion[];
   settings: GameSettings;
+  isTemplate?: boolean;
 };
 
 export type QuestionBankItem = {

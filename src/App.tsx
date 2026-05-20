@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { AppView, FeudGame, QuestionBankItem } from "./types";
 import { loadGames, saveGame, deleteGame, saveGames } from "./utils/storage";
 import { generateId } from "./utils/idGen";
+import { resetGameState, duplicateGame } from "./utils/gameLogic";
 import { sampleCampGame, sampleStandardGame } from "./data/sampleGame";
 import GameLibrary, { createNewGame } from "./components/GameLibrary";
 import GameEditor from "./components/GameEditor";
@@ -50,6 +51,45 @@ export default function App() {
 
   const handleGameUpdate = (game: FeudGame) => {
     persistGame(game);
+  };
+
+  const handleResetGame = (gameId: string) => {
+    setGames((prev) => {
+      const game = prev.find((g) => g.id === gameId);
+      if (!game) return prev;
+      return saveGame(resetGameState(game), prev);
+    });
+  };
+
+  const handleDuplicateGame = (gameId: string) => {
+    setGames((prev) => {
+      const game = prev.find((g) => g.id === gameId);
+      if (!game) return prev;
+      return saveGame(duplicateGame(game), prev);
+    });
+  };
+
+  const handleCreateGameFromBank = (items: QuestionBankItem[]) => {
+    const game = createNewGame();
+    const newQuestions = items.map((item) => ({
+      id: generateId(),
+      text: item.text,
+      respondentCount: item.respondentCount,
+      respondentTeamIds: [] as string[],
+      playableByTeamIds: game.teams.map((t) => t.id),
+      completed: false,
+      answers: item.answers.map((a) => ({
+        id: generateId(),
+        text: a.text,
+        votes: a.votes,
+        points: a.points,
+        aliases: a.aliases,
+        revealed: false,
+      })),
+    }));
+    const gameWithQuestions = { ...game, questions: newQuestions };
+    persistGame(gameWithQuestions);
+    setView({ type: "editor", gameId: game.id });
   };
 
   const handleAddBankQuestionsToGame = (gameId: string, items: QuestionBankItem[]) => {
@@ -144,12 +184,15 @@ export default function App() {
             onDelete={handleDelete}
             onImport={handleImport}
             onCreateNew={handleCreateNew}
+            onDuplicate={handleDuplicateGame}
+            onReset={handleResetGame}
           />
         )}
         {view.type === "bank" && (
           <QuestionBank
             games={games}
             onAddToGame={handleAddBankQuestionsToGame}
+            onCreateGameFromBank={handleCreateGameFromBank}
           />
         )}
       </main>

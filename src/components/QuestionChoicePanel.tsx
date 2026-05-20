@@ -5,6 +5,7 @@ interface Props {
   selectedId: string | null;
   onSelect: (q: FeudQuestion) => void;
   maxVisible: number;
+  large?: boolean;
 }
 
 export default function QuestionChoicePanel({
@@ -12,6 +13,7 @@ export default function QuestionChoicePanel({
   selectedId,
   onSelect,
   maxVisible,
+  large = false,
 }: Props) {
   const visible = questions.slice(0, maxVisible);
 
@@ -19,6 +21,50 @@ export default function QuestionChoicePanel({
     return (
       <div className="empty-state text-sm">
         Sem perguntas disponíveis para esta equipa.
+      </div>
+    );
+  }
+
+  if (large) {
+    return (
+      <div>
+        <div
+          className="text-muted font-bold"
+          style={{ fontSize: "1rem", marginBottom: "1rem", letterSpacing: "0.05em" }}
+        >
+          ESCOLHE UMA PERGUNTA ({visible.length} disponível{visible.length !== 1 ? "s" : ""})
+        </div>
+        <div className="question-choices-large">
+          {visible.map((q, i) => {
+            const totalPoints = q.answers
+              .filter((a) => !a.revealed)
+              .reduce((sum, a) => sum + a.points, 0);
+            const revealedCount = q.answers.filter((a) => a.revealed).length;
+            const isSelected = selectedId === q.id;
+
+            return (
+              <button
+                key={q.id}
+                className={`question-choice-large${isSelected ? " selected" : ""}`}
+                onClick={() => onSelect(q)}
+              >
+                <div className="question-choice-large-num">Pergunta {i + 1}</div>
+                <div className="question-choice-large-text">{q.text}</div>
+                <div className="question-choice-large-meta">
+                  {revealedCount > 0 && (
+                    <span style={{ color: "var(--correct)" }}>
+                      {revealedCount} revelada{revealedCount !== 1 ? "s" : ""} ·{" "}
+                    </span>
+                  )}
+                  <span>
+                    {totalPoints} pt{totalPoints !== 1 ? "s" : ""} disponíveis ·{" "}
+                    {q.answers.length} resposta{q.answers.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
     );
   }

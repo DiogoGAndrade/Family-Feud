@@ -209,6 +209,76 @@ label { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bot
 }
 .answer-rank { text-align: center; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; }
 
+/* ===== Demo / Template labels ===== */
+.badge-demo {
+  background: rgba(251,191,36,0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251,191,36,0.3);
+}
+
+.demo-notice {
+  font-size: 0.78rem;
+  color: #fbbf24;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ===== Large question choice cards (Play Mode) ===== */
+.question-choices-large {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.question-choice-large {
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(240,192,64,0.25);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  transition: all 0.18s;
+  width: 100%;
+}
+
+.question-choice-large:hover {
+  border-color: var(--accent);
+  background: rgba(240,192,64,0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(240,192,64,0.15);
+}
+
+.question-choice-large.selected {
+  border-color: var(--accent);
+  background: rgba(240,192,64,0.15);
+}
+
+.question-choice-large-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
+}
+
+.question-choice-large-text {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+}
+
+.question-choice-large-meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* ===== Play Mode ===== */
 .play-layout {
   display: grid;

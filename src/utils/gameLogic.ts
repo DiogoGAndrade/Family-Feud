@@ -1,5 +1,6 @@
 import type { FeudGame, FeudQuestion, FeudAnswer } from "../types";
 import { normalizeText } from "./normalizeText";
+import { generateId } from "./idGen";
 
 /**
  * Returns eligible questions for a team.
@@ -141,6 +142,55 @@ export function revealAnswer(
   };
 
   return { game: updatedGame, result };
+}
+
+/**
+ * Resets a game to its initial play state.
+ * Clears all scores, unreveals all answers, marks all questions incomplete.
+ * Pure function — does NOT mutate the input.
+ */
+export function resetGameState(game: FeudGame): FeudGame {
+  return {
+    ...game,
+    teams: game.teams.map((t) => ({ ...t, score: 0 })),
+    questions: game.questions.map((q) => ({
+      ...q,
+      completed: false,
+      answers: q.answers.map((a) => ({ ...a, revealed: false })),
+    })),
+  };
+}
+
+/**
+ * Creates a full copy of a game with fresh IDs, reset scores, and unrevealed answers.
+ * Team IDs are remapped so respondentTeamIds/playableByTeamIds stay consistent.
+ * Pure function.
+ */
+export function duplicateGame(game: FeudGame): FeudGame {
+  const teamIdMap: Record<string, string> = {};
+  const teams = game.teams.map((t) => {
+    const newId = generateId();
+    teamIdMap[t.id] = newId;
+    return { ...t, id: newId, score: 0 };
+  });
+
+  const questions = game.questions.map((q) => ({
+    ...q,
+    id: generateId(),
+    completed: false,
+    respondentTeamIds: q.respondentTeamIds.map((id) => teamIdMap[id] ?? id),
+    playableByTeamIds: q.playableByTeamIds.map((id) => teamIdMap[id] ?? id),
+    answers: q.answers.map((a) => ({ ...a, id: generateId(), revealed: false })),
+  }));
+
+  return {
+    ...game,
+    id: generateId(),
+    title: `${game.title} (Cópia)`,
+    teams,
+    questions,
+    isTemplate: false,
+  };
 }
 
 /**
