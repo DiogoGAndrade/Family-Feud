@@ -15,6 +15,7 @@ export const sampleCampGame: FeudGame = {
   id: "sample-camp-2024",
   title: "Jogo do Campo 2024",
   mode: "camp",
+  scoringMode: "raw_votes",
   teams: [
     { id: "t1", name: "Lobos", score: 0 },
     { id: "t2", name: "Águias", score: 0 },
@@ -129,6 +130,7 @@ export const sampleStandardGame: FeudGame = {
   id: "sample-standard-2024",
   title: "Jogo Rápido Demo",
   mode: "standard",
+  scoringMode: "raw_votes",
   teams: [
     { id: "s1", name: "Equipa A", score: 0 },
     { id: "s2", name: "Equipa B", score: 0 },

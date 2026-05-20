@@ -1,3 +1,5 @@
+export type ScoringMode = "raw_votes" | "normalized_100";
+
 export type Team = {
   id: string;
   name: string;
@@ -34,6 +36,7 @@ export type FeudGame = {
   id: string;
   title: string;
   mode: "standard" | "camp";
+  scoringMode: ScoringMode;
   teams: Team[];
   questions: FeudQuestion[];
   settings: GameSettings;

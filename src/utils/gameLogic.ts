@@ -1,4 +1,4 @@
-import type { FeudGame, FeudQuestion, FeudAnswer } from "../types";
+import type { FeudGame, FeudQuestion, FeudAnswer, ScoringMode } from "../types";
 import { normalizeText } from "./normalizeText";
 import { generateId } from "./idGen";
 
@@ -207,4 +207,112 @@ export function markQuestionCompletedIfNeeded(
     return { ...q, completed: allRevealed };
   });
   return { ...game, questions };
+}
+
+// ── Scoring utilities ─────────────────────────────────────────────────────────
+
+/**
+ * Calculates points for a single answer given its votes, the question's
+ * respondentCount, and the active scoring mode.
+ *
+ * raw_votes:       points = votes   (default, camp-safe)
+ * normalized_100:  points = round((votes / respondentCount) * 100)
+ *                  Falls back to raw_votes if respondentCount is 0/invalid.
+ */
+export function calculateAnswerPoints(
+  answerVotes: number,
+  respondentCount: number,
+  scoringMode: ScoringMode
+): number {
+  if (scoringMode === "normalized_100" && respondentCount > 0) {
+    return Math.round((answerVotes / respondentCount) * 100);
+  }
+  return answerVotes;
+}
+
+/**
+ * Recalculates all answer.points for a question based on the scoring mode.
+ * Does NOT change answer.votes. Pure function.
+ */
+export function recalculateQuestionPoints(
+  question: FeudQuestion,
+  scoringMode: ScoringMode
+): FeudQuestion {
+  return {
+    ...question,
+    answers: question.answers.map((a) => ({
+      ...a,
+      points: calculateAnswerPoints(a.votes, question.respondentCount, scoringMode),
+    })),
+  };
+}
+
+/**
+ * Recalculates points for every question in the game using game.scoringMode.
+ * Call this whenever scoringMode changes. Pure function.
+ */
+export function recalculateGamePoints(game: FeudGame): FeudGame {
+  return {
+    ...game,
+    questions: game.questions.map((q) =>
+      recalculateQuestionPoints(q, game.scoringMode)
+    ),
+  };
+}
+
+// ── Validation ────────────────────────────────────────────────────────────────
+
+export type ValidationWarning = {
+  level: "error" | "warning";
+  message: string;
+  questionId?: string;
+};
+
+/**
+ * Returns a list of validation warnings for a game.
+ * Does not mutate anything — just inspects and reports.
+ */
+export function validateGame(game: FeudGame): ValidationWarning[] {
+  const warnings: ValidationWarning[] = [];
+
+  if (!game.scoringMode) {
+    warnings.push({
+      level: "warning",
+      message: "scoringMode não definido — a usar raw_votes por padrão.",
+    });
+  }
+
+  for (const q of game.questions) {
+    const mode: ScoringMode = game.scoringMode ?? "raw_votes";
+
+    if (mode === "normalized_100" && (!q.respondentCount || q.respondentCount <= 0)) {
+      warnings.push({
+        level: "error",
+        message: `"${q.text.slice(0, 50)}": respondentCount inválido para o modo normalizado.`,
+        questionId: q.id,
+      });
+    }
+
+    for (const a of q.answers) {
+      if (mode === "raw_votes" && a.points !== a.votes) {
+        warnings.push({
+          level: "warning",
+          message: `"${a.text}": pontos (${a.points}) ≠ votos (${a.votes}) em modo Votos=Pontos.`,
+          questionId: q.id,
+        });
+      }
+      if (mode === "normalized_100" && q.respondentCount > 0) {
+        const expected = Math.round((a.votes / q.respondentCount) * 100);
+        if (a.points !== expected) {
+          warnings.push({
+            level: "warning",
+            message: `"${a.text}": pontos (${a.points}) ≠ esperado (${expected}) para normalizado.`,
+            questionId: q.id,
+          });
+        }
+      }
+    }
+  }
+
+  return warnings;
 }

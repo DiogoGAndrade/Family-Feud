@@ -1,6 +1,7 @@
-import { useState } from "react";
-import type { FeudGame, FeudQuestion, FeudAnswer, Team } from "../types";
+import { useState, useMemo } from "react";
+import type { FeudGame, FeudQuestion, FeudAnswer, Team, ScoringMode } from "../types";
 import { generateId } from "../utils/idGen";
+import { recalculateGamePoints, validateGame } from "../utils/gameLogic";
 
 interface Props {
   game: FeudGame;
@@ -114,6 +115,13 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
   };
 
   const handleSave = () => onSave(draft);
+
+  const handleScoringModeChange = (mode: ScoringMode) => {
+    setDraft((g) => recalculateGamePoints({ ...g, scoringMode: mode }));
+  };
+
+  // Validation warnings are computed lazily — only shown in the settings tab
+  const validationWarnings = useMemo(() => validateGame(draft), [draft]);
 
   return (
     <div className="app-shell">
@@ -253,6 +261,67 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
         {activeTab === "settings" && (
           <div className="card-lg">
             <div className="text-lg font-bold text-accent mb-3">Definições do Jogo</div>
+
+            {/* Scoring mode */}
+            <div className="card mb-3" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <div className="text-sm font-bold text-muted mb-2">MODO DE PONTUAÇÃO</div>
+              <div className="flex gap-2" style={{ flexWrap: "wrap" }}>
+                <button
+                  className={`btn ${draft.scoringMode === "raw_votes" ? "btn-primary" : "btn-secondary"}`}
+                  onClick={() => handleScoringModeChange("raw_votes")}
+                >
+                  Votos = Pontos
+                </button>
+                <button
+                  className={`btn ${draft.scoringMode === "normalized_100" ? "btn-primary" : "btn-secondary"}`}
+                  onClick={() => handleScoringModeChange("normalized_100")}
+                >
+                  Escala até 100
+                </button>
+              </div>
+              <div className="text-sm text-muted mt-2">
+                {draft.scoringMode === "raw_votes" ? (
+                  <>
+                    <strong>Votos = Pontos:</strong> cada resposta vale exatamente os seus votos.
+                    {draft.mode === "camp" && (
+                      <span style={{ color: "var(--correct)", marginLeft: "0.4rem" }}>
+                        ✓ Recomendado para modo campo.
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <strong>Escala até 100:</strong> pontos = round(votos / respondentes × 100).
+                    O total por pergunta é aproximadamente 100 pts.
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Validation warnings */}
+            {validationWarnings.length > 0 && (
+              <div className="mb-3">
+                {validationWarnings.slice(0, 5).map((w, i) => (
+                  <div
+                    key={i}
+                    className="demo-notice"
+                    style={{
+                      marginBottom: "0.3rem",
+                      color: w.level === "error" ? "#fca5a5" : "#fbbf24",
+                      borderColor: w.level === "error" ? "rgba(252,165,165,0.3)" : undefined,
+                    }}
+                  >
+                    {w.level === "error" ? "⚠️" : "ℹ️"} {w.message}
+                  </div>
+                ))}
+                {validationWarnings.length > 5 && (
+                  <div className="text-sm text-muted">
+                    +{validationWarnings.length - 5} mais avisos...
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div className="field">
                 <label>Escolhas visíveis por equipa (maxVisibleChoicesPerTeam)</label>

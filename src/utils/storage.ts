@@ -3,11 +3,25 @@ import type { FeudGame, QuestionPack } from "../types";
 const GAMES_KEY = "feudfactory_games";
 const PACKS_KEY = "feudfactory_questionpacks";
 
+/**
+ * Applies backward-compatible migrations to a game loaded from storage or JSON.
+ * Guarantees all required fields have safe defaults for old saves.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrateGame(raw: any): FeudGame {
+  return {
+    ...raw,
+    // scoringMode added in v2 — default to raw_votes for all existing saves
+    scoringMode: raw.scoringMode ?? "raw_votes",
+  } as FeudGame;
+}
+
 export function loadGames(): FeudGame[] {
   try {
     const raw = localStorage.getItem(GAMES_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as FeudGame[];
+    const games = JSON.parse(raw) as FeudGame[];
+    return games.map(migrateGame);
   } catch {
     return [];
   }
@@ -66,8 +80,8 @@ export function importGameFromJson(
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const data = JSON.parse(e.target?.result as string) as FeudGame;
-        resolve(data);
+        const data = JSON.parse(e.target?.result as string);
+        resolve(migrateGame(data));
       } catch {
         reject(new Error("Invalid JSON file"));
       }

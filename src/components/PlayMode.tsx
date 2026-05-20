@@ -255,6 +255,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
                   selectedId={null}
                   onSelect={handleSelectQuestion}
                   maxVisible={game.settings.maxVisibleChoicesPerTeam}
+                  scoringMode={game.scoringMode}
                   large
                 />
               </div>

@@ -1,4 +1,4 @@
-import type { FeudQuestion } from "../types";
+import type { FeudQuestion, ScoringMode } from "../types";
 
 interface Props {
   questions: FeudQuestion[];
@@ -6,6 +6,7 @@ interface Props {
   onSelect: (q: FeudQuestion) => void;
   maxVisible: number;
   large?: boolean;
+  scoringMode?: ScoringMode;
 }
 
 export default function QuestionChoicePanel({
@@ -14,6 +15,7 @@ export default function QuestionChoicePanel({
   onSelect,
   maxVisible,
   large = false,
+  scoringMode = "raw_votes",
 }: Props) {
   const visible = questions.slice(0, maxVisible);
 
@@ -57,7 +59,11 @@ export default function QuestionChoicePanel({
                     </span>
                   )}
                   <span>
-                    {totalPoints} pt{totalPoints !== 1 ? "s" : ""} disponíveis ·{" "}
+                    {totalPoints} pts disponíveis
+                    {scoringMode === "normalized_100" && " · escala 100"}
+                    {" · "}
+                    {q.respondentCount} participantes
+                    {" · "}
                     {q.answers.length} resposta{q.answers.length !== 1 ? "s" : ""}
                   </span>
                 </div>
