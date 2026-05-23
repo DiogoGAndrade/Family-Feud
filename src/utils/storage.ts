@@ -11,8 +11,16 @@ const PACKS_KEY = "feudfactory_questionpacks";
 function migrateGame(raw: any): FeudGame {
   return {
     ...raw,
-    // scoringMode added in v2 — default to raw_votes for all existing saves
     scoringMode: raw.scoringMode ?? "raw_votes",
+    settings: {
+      ...raw.settings,
+      specialCampScoring: raw.settings?.specialCampScoring ?? (raw.mode === "camp"),
+    },
+    teams: (raw.teams ?? []).map((t: any) => ({
+      ...t,
+      normalHits: t.normalHits ?? 0,
+      rareHits: t.rareHits ?? 0,
+    })),
   } as FeudGame;
 }
 

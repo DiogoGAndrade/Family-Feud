@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import type { FeudGame, FeudQuestion, FeudAnswer, Team, ScoringMode } from "../types";
 import { generateId } from "../utils/idGen";
 import { recalculateGamePoints, validateGame } from "../utils/gameLogic";
+import { CAMP_PAIRS, TEAM_QUESTIONNAIRE_SUMMARY } from "../data/campPlan";
+import type { TeamKey } from "../data/campPlan";
 
 interface Props {
   game: FeudGame;
@@ -30,7 +32,7 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
   const [selectedQId, setSelectedQId] = useState<string | null>(
     draft.questions[0]?.id ?? null
   );
-  const [activeTab, setActiveTab] = useState<"questions" | "teams" | "settings">("questions");
+  const [activeTab, setActiveTab] = useState<"questions" | "teams" | "settings" | "campplan">("questions");
 
   const update = (fn: (g: FeudGame) => FeudGame) => setDraft((g) => fn(g));
 
@@ -163,13 +165,16 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-3">
-          {(["questions", "teams", "settings"] as const).map((tab) => (
+          {(["questions", "teams", "settings", ...(draft.mode === "camp" ? ["campplan"] : [])] as const).map((tab) => (
             <button
               key={tab}
               className={`btn btn-secondary${activeTab === tab ? " btn-primary" : ""}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab as typeof activeTab)}
             >
-              {tab === "questions" ? "📋 Perguntas" : tab === "teams" ? "👥 Equipas" : "⚙️ Definições"}
+              {tab === "questions" ? "📋 Perguntas"
+                : tab === "teams" ? "👥 Equipas"
+                : tab === "settings" ? "⚙️ Definições"
+                : "🗺️ Plano Campo"}
             </button>
           ))}
         </div>
@@ -383,9 +388,125 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
                   Ativar sons (enableSounds)
                 </label>
               </div>
+              <div className="field">
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <input
+                    type="checkbox"
+                    checked={draft.settings.specialCampScoring}
+                    onChange={(e) =>
+                      update((g) => ({
+                        ...g,
+                        settings: { ...g.settings, specialCampScoring: e.target.checked },
+                      }))
+                    }
+                  />
+                  Pontuação especial campo (normalHits + raras×2)
+                </label>
+                {draft.settings.specialCampScoring && (
+                  <div className="text-sm text-muted mt-1">
+                    Resposta rara = 1 voto. Fórmula: normal + rara×2. Ex: "2+3x2" = 8 pts.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
+
+        {activeTab === "campplan" && draft.mode === "camp" && (
+          <CampPlanTab teams={draft.teams} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Sub-component: CampPlanTab ────────────────────────────────────────────────
+
+function CampPlanTab({ teams }: { teams: Team[] }) {
+  const TEAM_KEYS: TeamKey[] = ["branca", "amarela", "verde", "azul", "vermelha", "laranja"];
+  const TEAM_LABELS: Record<TeamKey, string> = {
+    branca: "Branca", amarela: "Amarela", verde: "Verde",
+    azul: "Azul", vermelha: "Vermelha", laranja: "Laranja",
+  };
+  const TEAM_COLORS: Record<TeamKey, string> = {
+    branca: "#e5e7eb", amarela: "#fde68a", verde: "#6ee7b7",
+    azul: "#93c5fd", vermelha: "#fca5a5", laranja: "#fdba74",
+  };
+
+  return (
+    <div>
+      <div className="card-lg mb-3">
+        <div className="text-lg font-bold text-accent mb-1">🗺️ Plano do Campo (30 Perguntas / 6 Equipas)</div>
+        <div className="text-sm text-muted mb-3">
+          15 pares de perguntas. Cada equipa respondeu a 10 perguntas (5 pares) e joga as outras 20.
+        </div>
+
+        {/* Pairs table */}
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                <th style={{ textAlign: "left", padding: "0.4rem 0.6rem", color: "var(--text-muted)" }}>Par</th>
+                <th style={{ textAlign: "left", padding: "0.4rem 0.6rem", color: "var(--text-muted)" }}>Qs</th>
+                {TEAM_KEYS.map((k) => (
+                  <th key={k} style={{ padding: "0.4rem 0.5rem", color: TEAM_COLORS[k] }}>
+                    {TEAM_LABELS[k]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {CAMP_PAIRS.map((pair) => (
+                <tr key={pair.pairNumber} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <td style={{ padding: "0.35rem 0.6rem", color: "var(--text-muted)" }}>Par {pair.pairNumber}</td>
+                  <td style={{ padding: "0.35rem 0.6rem" }}>Q{pair.questionNumbers[0]}, Q{pair.questionNumbers[1]}</td>
+                  {TEAM_KEYS.map((k) => {
+                    const isRespondent = pair.respondentTeams.includes(k);
+                    return (
+                      <td key={k} style={{ padding: "0.35rem 0.5rem", textAlign: "center" }}>
+                        {isRespondent ? (
+                          <span style={{ color: TEAM_COLORS[k], fontWeight: 700 }} title="Respondeu">R</span>
+                        ) : (
+                          <span style={{ color: "var(--correct)", fontSize: "0.8rem" }} title="Joga">✓</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="text-sm text-muted mt-2">
+          <strong style={{ color: "var(--text-muted)" }}>R</strong> = Respondeu (não joga) &nbsp;
+          <strong style={{ color: "var(--correct)" }}>✓</strong> = Joga
+        </div>
+      </div>
+
+      {/* Per-team questionnaire summary */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.75rem" }}>
+        {TEAM_KEYS.map((k) => {
+          const summary = TEAM_QUESTIONNAIRE_SUMMARY[k];
+          const matchingTeam = teams.find((t) => t.name.toLowerCase() === k);
+          return (
+            <div key={k} className="card" style={{ borderTop: `3px solid ${TEAM_COLORS[k]}` }}>
+              <div style={{ fontWeight: 800, color: TEAM_COLORS[k], marginBottom: "0.4rem" }}>
+                {TEAM_LABELS[k]}
+                {matchingTeam && (
+                  <span className="text-muted" style={{ fontWeight: 400, fontSize: "0.8rem", marginLeft: "0.4rem" }}>
+                    ({matchingTeam.name})
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-muted mb-1">
+                Respondeu ({summary.answered.length}): <span style={{ color: "var(--text)" }}>Q{summary.answered.join(", Q")}</span>
+              </div>
+              <div className="text-sm text-muted">
+                Joga ({summary.plays.length}): <span style={{ color: "var(--correct)" }}>Q{summary.plays.join(", Q")}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

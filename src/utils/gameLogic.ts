@@ -127,12 +127,28 @@ export function revealAnswer(
 
   const updatedQuestion = questions.find((q) => q.id === questionId)!;
   const revealedAnswer = updatedQuestion.answers.find((a) => a.id === answerId)!;
-  const pointsToAdd = addPoints ? revealedAnswer.points : 0;
 
-  const teams = game.teams.map((t) => {
-    if (t.id !== activeTeamId) return t;
-    return { ...t, score: t.score + pointsToAdd };
-  });
+  let teams: typeof game.teams;
+  if (addPoints && game.settings.specialCampScoring) {
+    const rare = isRareAnswer(revealedAnswer);
+    teams = game.teams.map((t) => {
+      if (t.id !== activeTeamId) return t;
+      const normalHits = (t.normalHits ?? 0) + (rare ? 0 : 1);
+      const rareHits = (t.rareHits ?? 0) + (rare ? 1 : 0);
+      return {
+        ...t,
+        normalHits,
+        rareHits,
+        score: getSpecialCampScoreValue(normalHits, rareHits),
+      };
+    });
+  } else {
+    const pointsToAdd = addPoints ? revealedAnswer.points : 0;
+    teams = game.teams.map((t) => {
+      if (t.id !== activeTeamId) return t;
+      return { ...t, score: t.score + pointsToAdd };
+    });
+  }
 
   const updatedGame = { ...game, questions, teams };
   const result: GuessResult = {
@@ -152,7 +168,7 @@ export function revealAnswer(
 export function resetGameState(game: FeudGame): FeudGame {
   return {
     ...game,
-    teams: game.teams.map((t) => ({ ...t, score: 0 })),
+    teams: game.teams.map((t) => ({ ...t, score: 0, normalHits: 0, rareHits: 0 })),
     questions: game.questions.map((q) => ({
       ...q,
       completed: false,
@@ -171,7 +187,7 @@ export function duplicateGame(game: FeudGame): FeudGame {
   const teams = game.teams.map((t) => {
     const newId = generateId();
     teamIdMap[t.id] = newId;
-    return { ...t, id: newId, score: 0 };
+    return { ...t, id: newId, score: 0, normalHits: 0, rareHits: 0 };
   });
 
   const questions = game.questions.map((q) => ({
@@ -207,6 +223,29 @@ export function markQuestionCompletedIfNeeded(
     return { ...q, completed: allRevealed };
   });
   return { ...game, questions };
+}
+
+// ── Special camp scoring ──────────────────────────────────────────────────────
+
+/** Rare = answer with exactly 1 vote. */
+export function isRareAnswer(answer: FeudAnswer): boolean {
+  return answer.votes === 1;
+}
+
+/**
+ * Returns the display string for a team's camp score.
+ * Examples: 0,0→"0"  4,0→"4"  0,2→"2x2"  2,3→"2+3x2"
+ */
+export function getSpecialCampScoreDisplay(normalHits: number, rareHits: number): string {
+  if (normalHits === 0 && rareHits === 0) return "0";
+  if (rareHits === 0) return `${normalHits}`;
+  if (normalHits === 0) return `${rareHits}x2`;
+  return `${normalHits}+${rareHits}x2`;
+}
+
+/** Calculated total for ranking: normalHits + rareHits × 2. */
+export function getSpecialCampScoreValue(normalHits: number, rareHits: number): number {
+  return normalHits + rareHits * 2;
 }
 
 // ── Scoring utilities ─────────────────────────────────────────────────────────
@@ -280,6 +319,29 @@ export function validateGame(game: FeudGame): ValidationWarning[] {
       level: "warning",
       message: "scoringMode não definido — a usar raw_votes por padrão.",
     });
+  }
+
+  if (game.mode === "camp" && game.teams.length !== 6) {
+    warnings.push({
+      level: "warning",
+      message: `Modo Campo normalmente usa 6 equipas, mas este jogo tem ${game.teams.length}.`,
+    });
+  }
+
+  for (const q of game.questions) {
+    const overlap = q.respondentTeamIds.filter((id) =>
+      q.playableByTeamIds.includes(id)
+    );
+    if (overlap.length > 0) {
+      const names = overlap
+        .map((id) => game.teams.find((t) => t.id === id)?.name ?? id)
+        .join(", ");
+      warnings.push({
+        level: "warning",
+        message: `"${q.text.slice(0, 50)}": equipas em respondentes E jogáveis: ${names}.`,
+        questionId: q.id,
+      });
+    }
   }
 
   for (const q of game.questions) {

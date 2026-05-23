@@ -17,12 +17,12 @@ export const sampleCampGame: FeudGame = {
   mode: "camp",
   scoringMode: "raw_votes",
   teams: [
-    { id: "t1", name: "Lobos", score: 0 },
-    { id: "t2", name: "Águias", score: 0 },
-    { id: "t3", name: "Panteras", score: 0 },
-    { id: "t4", name: "Dragões", score: 0 },
-    { id: "t5", name: "Cobras", score: 0 },
-    { id: "t6", name: "Leões", score: 0 },
+    { id: "t1", name: "Branca", score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t2", name: "Amarela", score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t3", name: "Verde", score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t4", name: "Azul", score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t5", name: "Vermelha", score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t6", name: "Laranja", score: 0, normalHits: 0, rareHits: 0 },
   ],
   questions: [
     {
@@ -122,6 +122,7 @@ export const sampleCampGame: FeudGame = {
     manualRevealAddsPoints: false,
     answerSlots: 8,
     enableSounds: true,
+    specialCampScoring: true,
   },
   isTemplate: true,
 };
@@ -172,6 +173,7 @@ export const sampleStandardGame: FeudGame = {
     manualRevealAddsPoints: false,
     answerSlots: 8,
     enableSounds: true,
+    specialCampScoring: false,
   },
   isTemplate: true,
 };

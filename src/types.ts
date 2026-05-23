@@ -4,6 +4,8 @@ export type Team = {
   id: string;
   name: string;
   score: number;
+  normalHits?: number;
+  rareHits?: number;
 };
 
 export type FeudAnswer = {
@@ -30,6 +32,7 @@ export type GameSettings = {
   manualRevealAddsPoints: boolean;
   answerSlots: 8 | 10;
   enableSounds: boolean;
+  specialCampScoring: boolean;
 };
 
 export type FeudGame = {

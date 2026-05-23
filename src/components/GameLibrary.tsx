@@ -182,6 +182,7 @@ export function createNewGame(): FeudGame {
       manualRevealAddsPoints: false,
       answerSlots: 8,
       enableSounds: true,
+      specialCampScoring: false,
     },
     isTemplate: false,
   };

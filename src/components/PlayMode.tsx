@@ -206,6 +206,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
                 teams={game.teams}
                 activeTeamId={activeTeamId}
                 onSelectTeam={handleSelectTeam}
+                specialCampScoring={game.settings.specialCampScoring}
               />
             </div>
             <div className="card">
