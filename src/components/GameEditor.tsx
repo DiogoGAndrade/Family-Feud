@@ -438,7 +438,8 @@ function CampPlanTab({ teams }: { teams: Team[] }) {
       <div className="card-lg mb-3">
         <div className="text-lg font-bold text-accent mb-1">🗺️ Plano do Campo (30 Perguntas / 6 Equipas)</div>
         <div className="text-sm text-muted mb-3">
-          15 pares de perguntas. Cada equipa respondeu a 10 perguntas (5 pares) e joga as outras 20.
+          15 pares de perguntas. Cada par é jogado por 2 equipas e respondido pelas outras 4.
+          Cada equipa responde a <strong>20 perguntas</strong> no questionário e joga <strong>10 perguntas</strong> ao vivo.
         </div>
 
         {/* Pairs table */}
@@ -461,13 +462,13 @@ function CampPlanTab({ teams }: { teams: Team[] }) {
                   <td style={{ padding: "0.35rem 0.6rem", color: "var(--text-muted)" }}>Par {pair.pairNumber}</td>
                   <td style={{ padding: "0.35rem 0.6rem" }}>Q{pair.questionNumbers[0]}, Q{pair.questionNumbers[1]}</td>
                   {TEAM_KEYS.map((k) => {
-                    const isRespondent = pair.respondentTeams.includes(k);
+                    const isPlayable = pair.playableByTeams.includes(k);
                     return (
                       <td key={k} style={{ padding: "0.35rem 0.5rem", textAlign: "center" }}>
-                        {isRespondent ? (
-                          <span style={{ color: TEAM_COLORS[k], fontWeight: 700 }} title="Respondeu">R</span>
+                        {isPlayable ? (
+                          <span style={{ color: TEAM_COLORS[k], fontWeight: 700 }} title="Joga ao vivo">✓</span>
                         ) : (
-                          <span style={{ color: "var(--correct)", fontSize: "0.8rem" }} title="Joga">✓</span>
+                          <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }} title="Respondeu no questionário">R</span>
                         )}
                       </td>
                     );
@@ -478,13 +479,13 @@ function CampPlanTab({ teams }: { teams: Team[] }) {
           </table>
         </div>
         <div className="text-sm text-muted mt-2">
-          <strong style={{ color: "var(--text-muted)" }}>R</strong> = Respondeu (não joga) &nbsp;
-          <strong style={{ color: "var(--correct)" }}>✓</strong> = Joga
+          <strong style={{ color: "var(--accent)" }}>✓</strong> = Joga ao vivo (2 equipas por par) &nbsp;
+          <strong style={{ color: "var(--text-muted)" }}>R</strong> = Respondeu no questionário (4 equipas por par)
         </div>
       </div>
 
       {/* Per-team questionnaire summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.75rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "0.75rem" }}>
         {TEAM_KEYS.map((k) => {
           const summary = TEAM_QUESTIONNAIRE_SUMMARY[k];
           const matchingTeam = teams.find((t) => t.name.toLowerCase() === k);
@@ -499,10 +500,12 @@ function CampPlanTab({ teams }: { teams: Team[] }) {
                 )}
               </div>
               <div className="text-sm text-muted mb-1">
-                Respondeu ({summary.answered.length}): <span style={{ color: "var(--text)" }}>Q{summary.answered.join(", Q")}</span>
+                Respondem no questionário ({summary.answered.length}):{" "}
+                <span style={{ color: "var(--text)" }}>Q{summary.answered.join(", Q")}</span>
               </div>
               <div className="text-sm text-muted">
-                Joga ({summary.plays.length}): <span style={{ color: "var(--correct)" }}>Q{summary.plays.join(", Q")}</span>
+                Jogam ao vivo ({summary.plays.length}):{" "}
+                <span style={{ color: "var(--accent)" }}>Q{summary.plays.join(", Q")}</span>
               </div>
             </div>
           );
