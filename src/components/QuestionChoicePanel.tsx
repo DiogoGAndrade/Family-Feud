@@ -7,6 +7,10 @@ interface Props {
   maxVisible: number;
   large?: boolean;
   scoringMode?: ScoringMode;
+  /** Article + noun for the header, e.g. "UMA PERGUNTA" or "UM FICHEIRO" */
+  articleLabel?: string;
+  /** Noun for the card number label, e.g. "Pergunta" or "Ficheiro" */
+  itemLabel?: string;
 }
 
 export default function QuestionChoicePanel({
@@ -16,6 +20,8 @@ export default function QuestionChoicePanel({
   maxVisible,
   large = false,
   scoringMode = "raw_votes",
+  articleLabel = "UMA PERGUNTA",
+  itemLabel = "Pergunta",
 }: Props) {
   const visible = questions.slice(0, maxVisible);
 
@@ -34,7 +40,7 @@ export default function QuestionChoicePanel({
           className="text-muted font-bold"
           style={{ fontSize: "1rem", marginBottom: "1rem", letterSpacing: "0.05em" }}
         >
-          ESCOLHE UMA PERGUNTA ({visible.length} disponível{visible.length !== 1 ? "s" : ""})
+          ESCOLHE {articleLabel} ({visible.length} disponível{visible.length !== 1 ? "s" : ""})
         </div>
         <div className="question-choices-large">
           {visible.map((q, i) => {
@@ -50,7 +56,7 @@ export default function QuestionChoicePanel({
                 className={`question-choice-large${isSelected ? " selected" : ""}`}
                 onClick={() => onSelect(q)}
               >
-                <div className="question-choice-large-num">Pergunta {i + 1}</div>
+                <div className="question-choice-large-num">{itemLabel} {i + 1}</div>
                 <div className="question-choice-large-text">{q.text}</div>
                 <div className="question-choice-large-meta">
                   {revealedCount > 0 && (
@@ -78,7 +84,7 @@ export default function QuestionChoicePanel({
   return (
     <div className="question-choices">
       <div className="text-sm text-muted mb-2">
-        Perguntas disponíveis ({visible.length})
+        Disponíveis ({visible.length})
       </div>
       {visible.map((q, i) => (
         <button

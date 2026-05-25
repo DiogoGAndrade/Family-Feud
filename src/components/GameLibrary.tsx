@@ -172,6 +172,7 @@ export function createNewGame(): FeudGame {
     title: "Novo Jogo",
     mode: "standard",
     scoringMode: "raw_votes",
+    theme: "classic" as const,
     teams: [
       { id: generateId(), name: "Equipa A", score: 0 },
       { id: generateId(), name: "Equipa B", score: 0 },

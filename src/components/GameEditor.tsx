@@ -128,7 +128,7 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="app-logo">Feud <span>Factory</span></div>
+        <div className="app-logo">Drive <span>do Além</span></div>
         <span style={{ color: "var(--accent)", fontWeight: 800, fontSize: "1.1rem" }}>Editor</span>
         <div style={{ marginLeft: "auto", display: "flex", gap: "0.5rem" }}>
           <button className="btn btn-secondary btn-sm" onClick={onBack}>← Voltar</button>
@@ -326,6 +326,30 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
                 )}
               </div>
             )}
+
+            {/* Theme */}
+            <div className="card mb-3" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <div className="text-sm font-bold text-muted mb-2">TEMA VISUAL</div>
+              <div className="flex gap-2">
+                <button
+                  className={`btn ${draft.theme === "cyber" ? "btn-primary" : "btn-secondary"}`}
+                  onClick={() => update((g) => ({ ...g, theme: "cyber" as const }))}
+                >
+                  🖥️ Cyber
+                </button>
+                <button
+                  className={`btn ${draft.theme === "classic" || !draft.theme ? "btn-primary" : "btn-secondary"}`}
+                  onClick={() => update((g) => ({ ...g, theme: "classic" as const }))}
+                >
+                  🎮 Classic
+                </button>
+              </div>
+              <div className="text-sm text-muted mt-2">
+                {draft.theme === "cyber"
+                  ? "Modo cyber: visual terminal, vocabulário de desencriptação, cores por equipa."
+                  : "Modo classic: aparência e vocabulário standard."}
+              </div>
+            </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div className="field">

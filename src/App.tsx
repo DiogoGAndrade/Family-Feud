@@ -152,7 +152,7 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="app-logo">
-          Feud <span>Factory</span>
+          Drive <span>do Além</span>
         </div>
         <nav>
           <button

@@ -12,6 +12,7 @@ function migrateGame(raw: any): FeudGame {
   return {
     ...raw,
     scoringMode: raw.scoringMode ?? "raw_votes",
+    theme: raw.theme ?? "classic",
     settings: {
       ...raw.settings,
       specialCampScoring: raw.settings?.specialCampScoring ?? (raw.mode === "camp"),

@@ -13,9 +13,10 @@ import type { FeudGame } from "../types";
  */
 export const sampleCampGame: FeudGame = {
   id: "sample-camp-2024",
-  title: "Jogo do Campo 2024",
+  title: "Loja de Informáticos ao Domicílio",
   mode: "camp",
   scoringMode: "raw_votes",
+  theme: "cyber",
   teams: [
     { id: "t1", name: "Branca", score: 0, normalHits: 0, rareHits: 0 },
     { id: "t2", name: "Amarela", score: 0, normalHits: 0, rareHits: 0 },
@@ -132,6 +133,7 @@ export const sampleStandardGame: FeudGame = {
   title: "Jogo Rápido Demo",
   mode: "standard",
   scoringMode: "raw_votes",
+  theme: "classic",
   teams: [
     { id: "s1", name: "Equipa A", score: 0 },
     { id: "s2", name: "Equipa B", score: 0 },

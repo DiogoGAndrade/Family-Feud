@@ -5,9 +5,10 @@ interface Props {
   onGuess: (text: string) => void;
   disabled?: boolean;
   feedback: "correct" | "wrong" | null;
+  placeholder?: string;
 }
 
-export default function GuessInput({ onGuess, disabled, feedback }: Props) {
+export default function GuessInput({ onGuess, disabled, feedback, placeholder }: Props) {
   const [value, setValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,7 +42,7 @@ export default function GuessInput({ onGuess, disabled, feedback }: Props) {
         ref={inputRef}
         type="text"
         className={inputClass}
-        placeholder="Escreve uma resposta e prime Enter..."
+        placeholder={placeholder ?? "Escreve uma resposta e prime Enter..."}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKey}
