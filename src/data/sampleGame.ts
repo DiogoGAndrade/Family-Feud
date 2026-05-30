@@ -1,16 +1,177 @@
 import type { FeudGame } from "../types";
+import { createBonusQuestions } from "./bonusQuestions";
 
-/**
- * Sample camp game with 6 teams and 6 questions.
- * Each question was answered by 2 teams (respondentTeamIds)
- * and is playable by the other 4 (playableByTeamIds).
- *
- * In a real camp of 30 questions and 6 teams of 5 each:
- * - Each team answered 5 questions
- * - Each team can play the 25 questions answered by others
- *
- * This sample uses 6 questions for demo purposes.
- */
+// t1=Amarela  t2=Azul  t3=Branca  t4=Laranja  t5=Verde  t6=Vermelha
+const TEAM_IDS = ["t1", "t2", "t3", "t4", "t5", "t6"];
+
+const mainQuestions: FeudGame["questions"] = [
+  // Pair 1 (Q1-2): Playable Amarela+Azul
+  {
+    id: "q1", questionType: "main", text: "Que poder especial dava mais jeito num campo de férias?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t2"], respondentTeamIds: ["t3", "t4", "t5", "t6"],
+  },
+  {
+    id: "q2", questionType: "main", text: "Que festividade gostavas que saísse na roleta todos os dias?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t2"], respondentTeamIds: ["t3", "t4", "t5", "t6"],
+  },
+  // Pair 2 (Q3-4): Playable Amarela+Branca
+  {
+    id: "q3", questionType: "main", text: "Diz uma desculpa clássica para não correr numa atividade.",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t3"], respondentTeamIds: ["t2", "t4", "t5", "t6"],
+  },
+  {
+    id: "q4", questionType: "main", text: "Que comida não podia faltar num arraial?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t3"], respondentTeamIds: ["t2", "t4", "t5", "t6"],
+  },
+  // Pair 3 (Q5-6): Playable Amarela+Laranja
+  {
+    id: "q5", questionType: "main", text: "Qual a coisa mais engraçada que podia sair de dentro do Pedregulho destruído?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t4"], respondentTeamIds: ["t2", "t3", "t5", "t6"],
+  },
+  {
+    id: "q6", questionType: "main", text: "Que participante é mais provável de adormecer durante uma explicação?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t4"], respondentTeamIds: ["t2", "t3", "t5", "t6"],
+  },
+  // Pair 4 (Q7-8): Playable Amarela+Verde
+  {
+    id: "q7", questionType: "main", text: "Que personagem seria pior a guardar um segredo?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t5"], respondentTeamIds: ["t2", "t3", "t4", "t6"],
+  },
+  {
+    id: "q8", questionType: "main", text: "Diz uma coisa que se perde sempre num campo de férias.",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t5"], respondentTeamIds: ["t2", "t3", "t4", "t6"],
+  },
+  // Pair 5 (Q9-10): Playable Amarela+Vermelha
+  {
+    id: "q9", questionType: "main", text: "Que personagem beberia uma poção sem perguntar o que era?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t6"], respondentTeamIds: ["t2", "t3", "t4", "t5"],
+  },
+  {
+    id: "q10", questionType: "main", text: "Diz um erro que as personagens dos filmes de terror costumam fazer.",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t1", "t6"], respondentTeamIds: ["t2", "t3", "t4", "t5"],
+  },
+  // Pair 6 (Q11-12): Playable Azul+Branca
+  {
+    id: "q11", questionType: "main", text: "Diz uma coisa que uma equipa faz quando está a perder.",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t3"], respondentTeamIds: ["t1", "t4", "t5", "t6"],
+  },
+  {
+    id: "q12", questionType: "main", text: "Que presente nunca se deve dar no Dia dos Namorados?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t3"], respondentTeamIds: ["t1", "t4", "t5", "t6"],
+  },
+  // Pair 7 (Q13-14): Playable Azul+Laranja
+  {
+    id: "q13", questionType: "main", text: "Que regra do campo gostavas de abolir?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t4"], respondentTeamIds: ["t1", "t3", "t5", "t6"],
+  },
+  {
+    id: "q14", questionType: "main", text: "Onde esconderias um ovo da Páscoa no Lugar d'Além?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t4"], respondentTeamIds: ["t1", "t3", "t5", "t6"],
+  },
+  // Pair 8 (Q15-16): Playable Azul+Verde
+  {
+    id: "q15", questionType: "main", text: "Que coisa não podia faltar na gala final?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t5"], respondentTeamIds: ["t1", "t3", "t4", "t6"],
+  },
+  {
+    id: "q16", questionType: "main", text: "Que objeto nunca devia ficar nas mãos de alguém tão caótico como a Ronalda McDonalda?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t5"], respondentTeamIds: ["t1", "t3", "t4", "t6"],
+  },
+  // Pair 9 (Q17-18): Playable Azul+Vermelha
+  {
+    id: "q17", questionType: "main", text: "Que personagem seria mais provável de chorar num discurso?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t6"], respondentTeamIds: ["t1", "t3", "t4", "t5"],
+  },
+  {
+    id: "q18", questionType: "main", text: "Que participante é mais provável de se rir num momento sério?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t2", "t6"], respondentTeamIds: ["t1", "t3", "t4", "t5"],
+  },
+  // Pair 10 (Q19-20): Playable Branca+Laranja
+  {
+    id: "q19", questionType: "main", text: "Que personagem seria melhor DJ numa festa?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t3", "t4"], respondentTeamIds: ["t1", "t2", "t5", "t6"],
+  },
+  {
+    id: "q20", questionType: "main", text: "Diz uma coisa que imaginas a Ronalda McDonalda a partir sem querer.",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t3", "t4"], respondentTeamIds: ["t1", "t2", "t5", "t6"],
+  },
+  // Pair 11 (Q21-22): Playable Branca+Verde
+  {
+    id: "q21", questionType: "main", text: "Qual a música mais ouvida nos Santos Populares deste ano?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t3", "t5"], respondentTeamIds: ["t1", "t2", "t4", "t6"],
+  },
+  {
+    id: "q22", questionType: "main", text: "Que coisa levas contigo se tiveres medo à noite?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t3", "t5"], respondentTeamIds: ["t1", "t2", "t4", "t6"],
+  },
+  // Pair 12 (Q23-24): Playable Branca+Vermelha
+  {
+    id: "q23", questionType: "main", text: "O que pode transformar uma festa num desastre?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t3", "t6"], respondentTeamIds: ["t1", "t2", "t4", "t5"],
+  },
+  {
+    id: "q24", questionType: "main", text: "Que objeto mágico seria mais útil numa missão?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t3", "t6"], respondentTeamIds: ["t1", "t2", "t4", "t5"],
+  },
+  // Pair 13 (Q25-26): Playable Laranja+Verde
+  {
+    id: "q25", questionType: "main", text: "Que comida te faz lembrar o Natal?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t4", "t5"], respondentTeamIds: ["t1", "t2", "t3", "t6"],
+  },
+  {
+    id: "q26", questionType: "main", text: "Que participante é mais provável de convencer a equipa a fazer disparates?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t4", "t5"], respondentTeamIds: ["t1", "t2", "t3", "t6"],
+  },
+  // Pair 14 (Q27-28): Playable Laranja+Vermelha
+  {
+    id: "q27", questionType: "main", text: "Que animal devia viver no covil do Malévolo Dumbledores?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t4", "t6"], respondentTeamIds: ["t1", "t2", "t3", "t5"],
+  },
+  {
+    id: "q28", questionType: "main", text: "Qual seria o pior sítio para um pedido para a gala final?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t4", "t6"], respondentTeamIds: ["t1", "t2", "t3", "t5"],
+  },
+  // Pair 15 (Q29-30): Playable Verde+Vermelha
+  {
+    id: "q29", questionType: "main", text: "Se fosses a Cátia Margarida Inês Maria Catarina Paula Sara, o que gostavas de receber no teu aniversário?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t5", "t6"], respondentTeamIds: ["t1", "t2", "t3", "t4"],
+  },
+  {
+    id: "q30", questionType: "main", text: "Que casal juntarias se fosses a Milla Valentina?",
+    respondentCount: 0, completed: false, answers: [],
+    playableByTeamIds: ["t5", "t6"], respondentTeamIds: ["t1", "t2", "t3", "t4"],
+  },
+];
+
 export const sampleCampGame: FeudGame = {
   id: "sample-camp-2024",
   title: "Loja de Informáticos ao Domicílio",
@@ -18,105 +179,16 @@ export const sampleCampGame: FeudGame = {
   scoringMode: "raw_votes",
   theme: "cyber",
   teams: [
-    { id: "t1", name: "Branca", score: 0, normalHits: 0, rareHits: 0 },
-    { id: "t2", name: "Amarela", score: 0, normalHits: 0, rareHits: 0 },
-    { id: "t3", name: "Verde", score: 0, normalHits: 0, rareHits: 0 },
-    { id: "t4", name: "Azul", score: 0, normalHits: 0, rareHits: 0 },
-    { id: "t5", name: "Vermelha", score: 0, normalHits: 0, rareHits: 0 },
-    { id: "t6", name: "Laranja", score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t1", name: "Amarela",  score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t2", name: "Azul",     score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t3", name: "Branca",   score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t4", name: "Laranja",  score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t5", name: "Verde",    score: 0, normalHits: 0, rareHits: 0 },
+    { id: "t6", name: "Vermelha", score: 0, normalHits: 0, rareHits: 0 },
   ],
   questions: [
-    {
-      id: "q1",
-      text: "Diz algo que encontras sempre numa mochila de acampamento.",
-      respondentCount: 100,
-      respondentTeamIds: ["t1", "t2"],
-      playableByTeamIds: ["t3", "t4", "t5", "t6"],
-      completed: false,
-      answers: [
-        { id: "q1a1", text: "Cantil", votes: 38, points: 38, aliases: ["garrafa de água", "agua", "água"], revealed: false },
-        { id: "q1a2", text: "Saco-cama", votes: 25, points: 25, aliases: ["sleeping bag", "saco de dormir"], revealed: false },
-        { id: "q1a3", text: "Lanterna", votes: 18, points: 18, aliases: ["torch", "luz", "flash"], revealed: false },
-        { id: "q1a4", text: "Mapa", votes: 10, points: 10, aliases: ["bússola", "bussola"], revealed: false },
-        { id: "q1a5", text: "Comida", votes: 6, points: 6, aliases: ["snacks", "petiscos", "lanche"], revealed: false },
-        { id: "q1a6", text: "Fósforos", votes: 3, points: 3, aliases: ["fosforos", "isqueiro", "lume"], revealed: false },
-      ],
-    },
-    {
-      id: "q2",
-      text: "Nomeia uma atividade popular num campo de verão.",
-      respondentCount: 100,
-      respondentTeamIds: ["t1", "t2"],
-      playableByTeamIds: ["t3", "t4", "t5", "t6"],
-      completed: false,
-      answers: [
-        { id: "q2a1", text: "Natação", votes: 32, points: 32, aliases: ["nadar", "piscina", "banho"], revealed: false },
-        { id: "q2a2", text: "Campismo", votes: 24, points: 24, aliases: ["acampar", "barraca", "tenda"], revealed: false },
-        { id: "q2a3", text: "Escalada", votes: 19, points: 19, aliases: ["trepar", "parede", "climbing"], revealed: false },
-        { id: "q2a4", text: "Fogueira", votes: 15, points: 15, aliases: ["fogueiro", "fogo", "lareira"], revealed: false },
-        { id: "q2a5", text: "Orientação", votes: 10, points: 10, aliases: ["mapa e bussola", "orienteering"], revealed: false },
-      ],
-    },
-    {
-      id: "q3",
-      text: "Diz uma palavra associada ao verão.",
-      respondentCount: 83,
-      respondentTeamIds: ["t3", "t4"],
-      playableByTeamIds: ["t1", "t2", "t5", "t6"],
-      completed: false,
-      answers: [
-        { id: "q3a1", text: "Praia", votes: 30, points: 30, aliases: ["mar", "areia", "onda"], revealed: false },
-        { id: "q3a2", text: "Sol", votes: 22, points: 22, aliases: ["calor", "verão", "quente"], revealed: false },
-        { id: "q3a3", text: "Gelado", votes: 16, points: 16, aliases: ["sorvete", "ice cream", "gelados"], revealed: false },
-        { id: "q3a4", text: "Férias", votes: 10, points: 10, aliases: ["descanso", "feriado", "folga"], revealed: false },
-        { id: "q3a5", text: "Piscina", votes: 5, points: 5, aliases: ["nadar", "mergulhar", "swimming pool"], revealed: false },
-      ],
-    },
-    {
-      id: "q4",
-      text: "Nomeia algo que os animais fazem que as pessoas também fazem.",
-      respondentCount: 54,
-      respondentTeamIds: ["t3", "t4"],
-      playableByTeamIds: ["t1", "t2", "t5", "t6"],
-      completed: false,
-      answers: [
-        { id: "q4a1", text: "Dormir", votes: 20, points: 20, aliases: ["descansar", "sonhar", "hibernar"], revealed: false },
-        { id: "q4a2", text: "Comer", votes: 15, points: 15, aliases: ["alimentar", "mastigar", "beber"], revealed: false },
-        { id: "q4a3", text: "Correr", votes: 10, points: 10, aliases: ["fugir", "saltar", "andar"], revealed: false },
-        { id: "q4a4", text: "Nadar", votes: 6, points: 6, aliases: ["mergulhar", "flutuar"], revealed: false },
-        { id: "q4a5", text: "Brincar", votes: 3, points: 3, aliases: ["jogar", "divertir"], revealed: false },
-      ],
-    },
-    {
-      id: "q5",
-      text: "Diz uma coisa que podes fazer à volta de uma fogueira.",
-      respondentCount: 120,
-      respondentTeamIds: ["t5", "t6"],
-      playableByTeamIds: ["t1", "t2", "t3", "t4"],
-      completed: false,
-      answers: [
-        { id: "q5a1", text: "Cantar", votes: 40, points: 40, aliases: ["musica", "música", "canções", "cancoes"], revealed: false },
-        { id: "q5a2", text: "Contar histórias", votes: 28, points: 28, aliases: ["historias", "histórias", "contos", "lendas"], revealed: false },
-        { id: "q5a3", text: "Assar marshmallows", votes: 22, points: 22, aliases: ["marshmallow", "assar", "tostar"], revealed: false },
-        { id: "q5a4", text: "Dançar", votes: 18, points: 18, aliases: ["dancar", "dançar", "bailar"], revealed: false },
-        { id: "q5a5", text: "Aquecer", votes: 12, points: 12, aliases: ["aquecimento", "calor", "esquentar"], revealed: false },
-      ],
-    },
-    {
-      id: "q6",
-      text: "Nomeia um animal que podes encontrar numa floresta.",
-      respondentCount: 90,
-      respondentTeamIds: ["t5", "t6"],
-      playableByTeamIds: ["t1", "t2", "t3", "t4"],
-      completed: false,
-      answers: [
-        { id: "q6a1", text: "Urso", votes: 35, points: 35, aliases: ["bear", "ursa"], revealed: false },
-        { id: "q6a2", text: "Lobo", votes: 25, points: 25, aliases: ["wolf", "lobos"], revealed: false },
-        { id: "q6a3", text: "Corvo", votes: 15, points: 15, aliases: ["crow", "corvos", "pássaro negro"], revealed: false },
-        { id: "q6a4", text: "Veado", votes: 10, points: 10, aliases: ["deer", "cervo", "corça"], revealed: false },
-        { id: "q6a5", text: "Javali", votes: 5, points: 5, aliases: ["wild boar", "porco bravo"], revealed: false },
-      ],
-    },
+    ...mainQuestions,
+    ...createBonusQuestions(TEAM_IDS),
   ],
   settings: {
     maxVisibleChoicesPerTeam: 3,
@@ -162,8 +234,8 @@ export const sampleStandardGame: FeudGame = {
       playableByTeamIds: ["s1", "s2"],
       completed: false,
       answers: [
-        { id: "sq2a1", text: "Frigorifico", votes: 38, points: 38, aliases: ["frigorífico", "geladeira", "frigorifico", "fridge"], revealed: false },
-        { id: "sq2a2", text: "Fogão", votes: 28, points: 28, aliases: ["fogao", "coocina", "stove"], revealed: false },
+        { id: "sq2a1", text: "Frigorifico", votes: 38, points: 38, aliases: ["frigorífico", "geladeira", "fridge"], revealed: false },
+        { id: "sq2a2", text: "Fogão", votes: 28, points: 28, aliases: ["fogao", "stove"], revealed: false },
         { id: "sq2a3", text: "Micro-ondas", votes: 18, points: 18, aliases: ["microondas", "microwave"], revealed: false },
         { id: "sq2a4", text: "Panela", votes: 10, points: 10, aliases: ["pot", "tacho", "caçarola"], revealed: false },
         { id: "sq2a5", text: "Facas", votes: 6, points: 6, aliases: ["faca", "knife", "cutelo"], revealed: false },

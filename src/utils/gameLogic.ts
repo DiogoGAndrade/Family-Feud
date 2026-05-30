@@ -2,34 +2,55 @@ import type { FeudGame, FeudQuestion, FeudAnswer, ScoringMode } from "../types";
 import { normalizeText } from "./normalizeText";
 import { generateId } from "./idGen";
 
+/** True when a team has no remaining main questions to play. */
+function hasTeamFinishedMainQuestions(game: FeudGame, teamId: string): boolean {
+  return !game.questions.some((q) => {
+    if ((q.questionType ?? "main") !== "main") return false;
+    if (q.completed) return false;
+    if (!q.playableByTeamIds.includes(teamId)) return false;
+    if (game.mode !== "camp" && q.respondentTeamIds.includes(teamId)) return false;
+    return true;
+  });
+}
+
 /**
  * Returns eligible questions for a team.
  *
- * Rules:
+ * Rules (main questions):
  * - Exclude completed questions
  * - Include only if playableByTeamIds contains teamId
- * - Exclude if respondentTeamIds contains teamId
- *   (unless playableByTeamIds explicitly contains teamId, which overrides for camp mode)
+ * - In standard mode, exclude if team was a respondent
  * - In camp mode, playableByTeamIds always wins over respondentTeamIds
- * - Return in original question order
+ *
+ * Bonus questions:
+ * - Only available after the team has finished all its main questions
+ * - Available to any team listed in playableByTeamIds (typically all teams)
  */
 export function getEligibleQuestionsForTeam(
   game: FeudGame,
   teamId: string
 ): FeudQuestion[] {
+  const mainFinished = hasTeamFinishedMainQuestions(game, teamId);
+
   return game.questions.filter((q) => {
     if (q.completed) return false;
+    const type = q.questionType ?? "main";
+
+    if (type === "bonus") {
+      if (!mainFinished) return false;
+      return q.playableByTeamIds.includes(teamId);
+    }
+
+    // Main question
     const isPlayable = q.playableByTeamIds.includes(teamId);
     if (!isPlayable) return false;
-
-    // In camp mode, being explicitly listed in playableByTeamIds overrides respondentTeamIds
     if (game.mode === "camp") return true;
-
-    // In standard mode, exclude if team was a respondent
-    const wasRespondent = q.respondentTeamIds.includes(teamId);
-    return !wasRespondent;
+    return !q.respondentTeamIds.includes(teamId);
   });
 }
+
+/** Export the helper so PlayMode can show a "bonus unlocked" indicator if needed. */
+export { hasTeamFinishedMainQuestions };
 
 /**
  * Returns how many questions a team still has to play.

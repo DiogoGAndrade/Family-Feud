@@ -22,6 +22,7 @@ export type FeudAnswer = {
 export type FeudQuestion = {
   id: string;
   text: string;
+  questionType?: "main" | "bonus";
   respondentCount: number;
   respondentTeamIds: string[];
   playableByTeamIds: string[];

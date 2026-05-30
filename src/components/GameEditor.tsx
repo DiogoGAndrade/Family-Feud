@@ -447,7 +447,7 @@ export default function GameEditor({ game, onSave, onBack }: Props) {
 // ── Sub-component: CampPlanTab ────────────────────────────────────────────────
 
 function CampPlanTab({ teams }: { teams: Team[] }) {
-  const TEAM_KEYS: TeamKey[] = ["branca", "amarela", "verde", "azul", "vermelha", "laranja"];
+  const TEAM_KEYS: TeamKey[] = ["amarela", "azul", "branca", "laranja", "verde", "vermelha"];
   const TEAM_LABELS: Record<TeamKey, string> = {
     branca: "Branca", amarela: "Amarela", verde: "Verde",
     azul: "Azul", vermelha: "Vermelha", laranja: "Laranja",

@@ -22,6 +22,10 @@ function migrateGame(raw: any): FeudGame {
       normalHits: t.normalHits ?? 0,
       rareHits: t.rareHits ?? 0,
     })),
+    questions: (raw.questions ?? []).map((q: any) => ({
+      ...q,
+      questionType: q.questionType ?? "main",
+    })),
   } as FeudGame;
 }
 
