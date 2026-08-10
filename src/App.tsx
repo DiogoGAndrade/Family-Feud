@@ -11,12 +11,18 @@ import QuestionBank from "./components/QuestionBank";
 import "./styles/app.css";
 
 function initGames(): FeudGame[] {
+  const TEMPLATES = [sampleCampGame, sampleStandardGame];
   const saved = loadGames();
-  if (saved.length > 0) return saved;
-  // Pre-load sample games for first-run experience
-  const initial = [sampleCampGame, sampleStandardGame];
-  saveGames(initial);
-  return initial;
+  if (saved.length === 0) {
+    saveGames(TEMPLATES);
+    return TEMPLATES;
+  }
+  // Always refresh built-in templates with latest source data so that
+  // answer populations and other template changes take effect immediately.
+  // User-created games (generated IDs) are left untouched.
+  const updated = saved.map((g) => TEMPLATES.find((t) => t.id === g.id) ?? g);
+  saveGames(updated);
+  return updated;
 }
 
 export default function App() {
