@@ -27,6 +27,7 @@ export type FeudQuestion = {
   respondentTeamIds: string[];
   playableByTeamIds: string[];
   answers: FeudAnswer[];
+  overflowAnswers?: FeudAnswer[];
   completed: boolean;
 };
 
