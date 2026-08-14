@@ -306,6 +306,9 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
                   justRevealedId={justRevealedId}
                   manualRevealAddsPoints={game.settings.manualRevealAddsPoints}
                   onManualReveal={handleManualReveal}
+                  playableNames={currentQuestion.playableByTeamIds
+                    .map((id) => game.teams.find((t) => t.id === id)?.name)
+                    .filter((name): name is string => !!name)}
                 />
                 <div className="card">
                   <GuessInput

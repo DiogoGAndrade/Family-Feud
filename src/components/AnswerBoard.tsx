@@ -6,6 +6,8 @@ interface Props {
   justRevealedId: string | null;
   manualRevealAddsPoints: boolean;
   onManualReveal: (answerId: string) => void;
+  /** Names of the players/teams allowed to guess on this specific question. */
+  playableNames?: string[];
 }
 
 export default function AnswerBoard({
@@ -14,6 +16,7 @@ export default function AnswerBoard({
   justRevealedId,
   manualRevealAddsPoints,
   onManualReveal,
+  playableNames,
 }: Props) {
   const slots = Math.min(answerSlots, question.answers.length);
   const filledAnswers = question.answers.slice(0, slots);
@@ -21,6 +24,11 @@ export default function AnswerBoard({
   return (
     <div>
       <div className="answer-board-title">{question.text}</div>
+      {playableNames && playableNames.length > 0 && (
+        <div className="text-sm text-muted" style={{ marginTop: "0.25rem", textAlign: "center" }}>
+          🕵️ Adivinham: <strong style={{ color: "var(--accent)" }}>{playableNames.join(" · ")}</strong>
+        </div>
+      )}
       <div
         className="answer-grid"
         style={{ marginTop: "0.75rem" }}

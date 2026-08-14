@@ -4,6 +4,7 @@ import { loadGames, saveGame, deleteGame, saveGames } from "./utils/storage";
 import { generateId } from "./utils/idGen";
 import { resetGameState, duplicateGame } from "./utils/gameLogic";
 import { sampleCampGame, sampleStandardGame } from "./data/sampleGame";
+import { detectiveGame } from "./data/detectiveGame";
 import GameLibrary, { createNewGame } from "./components/GameLibrary";
 import GameEditor from "./components/GameEditor";
 import PlayMode from "./components/PlayMode";
@@ -11,7 +12,7 @@ import QuestionBank from "./components/QuestionBank";
 import "./styles/app.css";
 
 function initGames(): FeudGame[] {
-  const TEMPLATES = [sampleCampGame, sampleStandardGame];
+  const TEMPLATES = [sampleCampGame, sampleStandardGame, detectiveGame];
   const saved = loadGames();
   if (saved.length === 0) {
     saveGames(TEMPLATES);
@@ -21,8 +22,11 @@ function initGames(): FeudGame[] {
   // answer populations and other template changes take effect immediately.
   // User-created games (generated IDs) are left untouched.
   const updated = saved.map((g) => TEMPLATES.find((t) => t.id === g.id) ?? g);
-  saveGames(updated);
-  return updated;
+  // Add any new built-in templates that aren't in the saved library yet.
+  const missing = TEMPLATES.filter((t) => !saved.some((g) => g.id === t.id));
+  const result = [...updated, ...missing];
+  saveGames(result);
+  return result;
 }
 
 export default function App() {
