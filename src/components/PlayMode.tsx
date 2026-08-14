@@ -26,11 +26,30 @@ interface Props {
 
 type Feedback = "correct" | "wrong" | null;
 
+/**
+ * Games matching this id/title use a fixed sequential flow (P1..Pn, one
+ * question at a time, no picker) instead of the per-team question-choice
+ * flow used by every other game.
+ */
+const SEQUENTIAL_GAME_ID = "detective-abobora-2026";
+const SEQUENTIAL_GAME_TITLE = "FEUD DOS DETETIVES — MUNDO DAS ABÓBORAS";
+
+function firstIncompleteIndex(questions: FeudQuestion[]): number {
+  const idx = questions.findIndex((q) => !q.completed);
+  return idx === -1 ? questions.length : idx;
+}
+
 export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
+  const isSequentialGame =
+    game.id === SEQUENTIAL_GAME_ID || game.title === SEQUENTIAL_GAME_TITLE;
+
   const [activeTeamId, setActiveTeamId] = useState<string | null>(
     game.teams[0]?.id ?? null
   );
   const [selectedQuestion, setSelectedQuestion] = useState<FeudQuestion | null>(null);
+  const [sequentialIndex, setSequentialIndex] = useState<number>(() =>
+    firstIncompleteIndex(game.questions)
+  );
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [justRevealedId, setJustRevealedId] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -44,8 +63,12 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
 
   const isCyber = game.theme === "cyber";
 
-  // Keep selected question in sync with game state
-  const currentQuestion = selectedQuestion
+  // Sequential games: current question is simply the next incomplete one, by
+  // number, with no picker involved. Other games: keep the existing
+  // team-chooses-a-question flow, synced with live game state.
+  const currentQuestion = isSequentialGame
+    ? (sequentialIndex < game.questions.length ? game.questions[sequentialIndex] : null)
+    : selectedQuestion
     ? game.questions.find((q) => q.id === selectedQuestion.id) ?? null
     : null;
 
@@ -176,6 +199,11 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
     setFeedback(null);
   };
 
+  const handleNextSequentialQuestion = () => {
+    setSequentialIndex(firstIncompleteIndex(game.questions));
+    setFeedback(null);
+  };
+
   const handleReset = () => {
     if (
       confirm(
@@ -185,13 +213,18 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
       const reset = resetGameState(game);
       onGameUpdate(reset);
       setSelectedQuestion(null);
+      setSequentialIndex(0);
       setFeedback(null);
       setQuestionChoicesByTeam(rerollQuestionChoicesForAllTeams(reset));
     }
   };
 
   const activeTeam = game.teams.find((t) => t.id === activeTeamId);
-  const questionIsActive = !!(currentQuestion && !currentQuestion.completed);
+  // Sequential games keep the answer board visible after completion so the
+  // host can see the revealed board and press "Próxima pergunta".
+  const questionIsActive = isSequentialGame
+    ? !!currentQuestion
+    : !!(currentQuestion && !currentQuestion.completed);
 
   // Cyber-conditional wording
   const feedbackCorrectText = isCyber ? "✓ FRAGMENTO DESBLOQUEADO" : "✓ CORRETO!";
@@ -298,7 +331,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
 
           {/* Center: question selection or answer board */}
           <div className="play-center">
-            {questionIsActive ? (
+            {questionIsActive && currentQuestion ? (
               <>
                 <AnswerBoard
                   question={currentQuestion}
@@ -310,26 +343,48 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
                     .map((id) => game.teams.find((t) => t.id === id)?.name)
                     .filter((name): name is string => !!name)}
                 />
-                <div className="card">
-                  <GuessInput
-                    onGuess={handleGuess}
-                    disabled={!activeTeamId}
-                    feedback={feedback}
-                    placeholder={guessPlaceholder}
-                  />
-                  <div className="text-sm text-muted mt-2">
-                    {isCyber ? "OPERADOR ATIVO: " : "Equipa ativa: "}
-                    <strong style={{ color: "var(--accent)" }}>
-                      {activeTeam?.name ?? "—"}
-                    </strong>
-                    {game.settings.manualRevealAddsPoints && (
-                      <span className="badge badge-camp" style={{ marginLeft: "0.5rem" }}>
-                        Revelar manual = pontos
-                      </span>
-                    )}
+                {isSequentialGame && currentQuestion.completed ? (
+                  <div className="card" style={{ textAlign: "center" }}>
+                    <button className="btn btn-primary btn-lg" onClick={handleNextSequentialQuestion}>
+                      Próxima pergunta →
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="card">
+                    <GuessInput
+                      onGuess={handleGuess}
+                      disabled={!activeTeamId}
+                      feedback={feedback}
+                      placeholder={guessPlaceholder}
+                    />
+                    <div className="text-sm text-muted mt-2">
+                      {isCyber ? "OPERADOR ATIVO: " : "Equipa ativa: "}
+                      <strong style={{ color: "var(--accent)" }}>
+                        {activeTeam?.name ?? "—"}
+                      </strong>
+                      {game.settings.manualRevealAddsPoints && (
+                        <span className="badge badge-camp" style={{ marginLeft: "0.5rem" }}>
+                          Revelar manual = pontos
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </>
+            ) : isSequentialGame ? (
+              <div className="card" style={{ textAlign: "center", padding: "2.5rem" }}>
+                <div
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 900,
+                    color: "var(--accent)",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  🎉 Fim do jogo!
+                </div>
+                <div className="text-muted">Todas as 21 perguntas foram respondidas.</div>
+              </div>
             ) : activeTeamId && displayChoices.length > 0 ? (
               <div className="card-lg" style={{ flex: 1 }}>
                 <QuestionChoicePanel
@@ -364,7 +419,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
           {/* Right sidebar — hidden in presentation mode */}
           {!presentationMode && (
             <div className="play-sidebar-right">
-              {questionIsActive && activeTeamId && displayChoices.length > 0 && (
+              {!isSequentialGame && questionIsActive && activeTeamId && displayChoices.length > 0 && (
                 <div className="card">
                   <QuestionChoicePanel
                     questions={displayChoices}
