@@ -2,6 +2,7 @@
  * Normalizes text for fuzzy answer matching.
  * - Converts to lowercase
  * - Removes diacritics/accents (e.g., "ã" → "a", "é" → "e")
+ * - Strips simple punctuation (.,!?;:'"()[]{}-–—_/\)
  * - Trims whitespace and collapses internal spaces
  *
  * Examples:
@@ -9,12 +10,14 @@
  *   normalizeText("MÃE")  === "mae"
  *   normalizeText("  mae ") === "mae"
  *   normalizeText("café")  === "cafe"
+ *   normalizeText("Paulenda!")  === "paulenda"
  */
 export function normalizeText(text: string): string {
   return text
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
+    .replace(/[.,!?;:'"()[\]{}\-–—_/\\]/g, " ")
     .trim()
     .replace(/\s+/g, " ");
 }

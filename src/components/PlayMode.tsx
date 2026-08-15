@@ -50,6 +50,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
   const [sequentialIndex, setSequentialIndex] = useState<number>(() =>
     firstIncompleteIndex(game.questions)
   );
+  const [editingGuessers, setEditingGuessers] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [justRevealedId, setJustRevealedId] = useState<string | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -201,7 +202,26 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
 
   const handleNextSequentialQuestion = () => {
     setSequentialIndex(firstIncompleteIndex(game.questions));
+    setEditingGuessers(false);
     setFeedback(null);
+  };
+
+  // Reassigns guesser `index` (0/1/2) on the current question to `newTeamId`.
+  // Respondents are recalculated as every other team, so Malévolo — who is
+  // never in game.teams — can never end up as a guesser.
+  const handleChangeGuesser = (index: number, newTeamId: string) => {
+    if (!currentQuestion) return;
+    const newPlayable = [...currentQuestion.playableByTeamIds];
+    newPlayable[index] = newTeamId;
+    const newRespondents = game.teams
+      .map((t) => t.id)
+      .filter((id) => !newPlayable.includes(id));
+    const updatedQuestions = game.questions.map((q) =>
+      q.id === currentQuestion.id
+        ? { ...q, playableByTeamIds: newPlayable, respondentTeamIds: newRespondents }
+        : q
+    );
+    onGameUpdate({ ...game, questions: updatedQuestions });
   };
 
   const handleReset = () => {
@@ -214,6 +234,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
       onGameUpdate(reset);
       setSelectedQuestion(null);
       setSequentialIndex(0);
+      setEditingGuessers(false);
       setFeedback(null);
       setQuestionChoicesByTeam(rerollQuestionChoicesForAllTeams(reset));
     }
@@ -343,6 +364,43 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
                     .map((id) => game.teams.find((t) => t.id === id)?.name)
                     .filter((name): name is string => !!name)}
                 />
+                {isSequentialGame && (
+                  <div className="card" style={{ padding: "0.6rem 0.9rem" }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setEditingGuessers((v) => !v)}
+                    >
+                      ✏️ {editingGuessers ? "Fechar edição de adivinhadores" : "Editar adivinhadores"}
+                    </button>
+                    {editingGuessers && (
+                      <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.6rem", flexWrap: "wrap" }}>
+                        {[0, 1, 2].map((i) => {
+                          const otherSelected = currentQuestion.playableByTeamIds.filter((_, idx) => idx !== i);
+                          const options = game.teams.filter((t) => !otherSelected.includes(t.id));
+                          return (
+                            <label
+                              key={i}
+                              className="text-sm text-muted"
+                              style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}
+                            >
+                              Adivinhador {i + 1}
+                              <select
+                                value={currentQuestion.playableByTeamIds[i] ?? ""}
+                                onChange={(e) => handleChangeGuesser(i, e.target.value)}
+                              >
+                                {options.map((t) => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {isSequentialGame && currentQuestion.completed ? (
                   <div className="card" style={{ textAlign: "center" }}>
                     <button className="btn btn-primary btn-lg" onClick={handleNextSequentialQuestion}>
@@ -383,7 +441,7 @@ export default function PlayMode({ game, onGameUpdate, onBack }: Props) {
                 >
                   🎉 Fim do jogo!
                 </div>
-                <div className="text-muted">Todas as 21 perguntas foram respondidas.</div>
+                <div className="text-muted">Todas as {game.questions.length} perguntas foram respondidas.</div>
               </div>
             ) : activeTeamId && displayChoices.length > 0 ? (
               <div className="card-lg" style={{ flex: 1 }}>
